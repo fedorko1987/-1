@@ -19,6 +19,7 @@
     $rand = date_timestamp_get(date_create());
     $site = "http://example/";
     $url = $_POST['url'];
+    $link = htmlspecialchars($_POST['link']);
 
     function connect_sql() {
     $SQLDatabase = 'url';
@@ -39,11 +40,43 @@
         return $mysql_connect;
     }
 
+
     $mysql_connect = connect_sql();
-    $result =  $mysql_connect->query("INSERT INTO url (url, new_url) VALUES ('$url', '$site$rand')");
-    if (isset($_POST)){
-        mysqli_close($result);
+    if ($url) {
+        $url = strip_tags ($url);
+        $site = strip_tags ($site);
+        $result = $mysql_connect->query("INSERT INTO url (url, new_url) VALUES ('$url', '$rand')");
+    echo "<a href='$site$rand' target='_blank'>$site$rand</a>";
     }
+
+    $param = str_replace('/', '', $_SERVER['REQUEST_URI']);
+
+
+    @$select = $mysql_connect->query(("SELECT `url` FROM 'url' WHERE 'new_url' = '".$param."'"));
+    if ($select){
+        $res=[
+            'url'   => $select['url'],
+            'key'  => $select['new_url'],
+            'link'  =>
+                'http://'.$_SERVER['HTTP_HOST'].'/-'.$select['new_url']
+        ];
+    }
+
+
+
+
+    $key = htmlspecialchars($_GET['key']);
+    if (!empty ($_GET['key'])){
+        @$select =$mysql_connect->query("SELECT * FROM 'url' WHERE 'new_url' = '" . $key . "'");
+        if ($select) {
+            $res = ['url' => $select['url'],
+                'key' => $select['new_url'],
+            ];
+            header('Location:' . $res['url']);
+    }
+
+    }
+
 
 
 
